@@ -10,6 +10,7 @@ CREATE TABLE usuarios (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   nombre VARCHAR(255) NOT NULL,
+  rfc VARCHAR(13) NOT NULL,
   tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('agricultor', 'empresa')),
   wallet_address VARCHAR(100),
   badge_level VARCHAR(20) DEFAULT 'nuevo' CHECK (badge_level IN ('nuevo', 'verificado', 'confiable', 'elite')),
