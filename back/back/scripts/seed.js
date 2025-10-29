@@ -15,25 +15,25 @@ const seed = async () => {
     const password_hash = await bcrypt.hash('password123', 10);
 
     const agricultores = [
-      { nombre: 'Juan Pérez García', email: 'juan@agricola.com', wallet: 'GAJPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'María Rodríguez', email: 'maria@campo.com', wallet: 'GBKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Carlos Hernández', email: 'carlos@azucar.com', wallet: 'GCKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Ana Martínez López', email: 'ana@verde.com', wallet: 'GDKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Roberto Sánchez', email: 'roberto@cana.com', wallet: 'GEKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Laura González', email: 'laura@organico.com', wallet: 'GFKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Pedro Ramírez', email: 'pedro@sustentable.com', wallet: 'GGKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Isabel Torres', email: 'isabel@eco.com', wallet: 'GHKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Miguel Flores', email: 'miguel@natural.com', wallet: 'GIKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Carmen Díaz', email: 'carmen@tierra.com', wallet: 'GJKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' }
+      { nombre: 'Juan Pérez García', email: 'juan@agricola.com', wallet: 'GAJPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'PEGA850315HX2' },
+      { nombre: 'María Rodríguez', email: 'maria@campo.com', wallet: 'GBKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'ROMA920607MN5' },
+      { nombre: 'Carlos Hernández', email: 'carlos@azucar.com', wallet: 'GCKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'HERC880212PL8' },
+      { nombre: 'Ana Martínez López', email: 'ana@verde.com', wallet: 'GDKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'MALA931125KJ3' },
+      { nombre: 'Roberto Sánchez', email: 'roberto@cana.com', wallet: 'GEKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'SANR870419RT6' },
+      { nombre: 'Laura González', email: 'laura@organico.com', wallet: 'GFKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'GOLA900823WS9' },
+      { nombre: 'Pedro Ramírez', email: 'pedro@sustentable.com', wallet: 'GGKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'RAMP860530QF1' },
+      { nombre: 'Isabel Torres', email: 'isabel@eco.com', wallet: 'GHKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'TOII941017ZX4' },
+      { nombre: 'Miguel Flores', email: 'miguel@natural.com', wallet: 'GIKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'FLOM891203CV7' },
+      { nombre: 'Carmen Díaz', email: 'carmen@tierra.com', wallet: 'GJKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'DIAC920915BN2' }
     ];
 
     const agricultoresIds = [];
     for (const ag of agricultores) {
       const result = await pool.query(
-        `INSERT INTO usuarios (email, password_hash, nombre, tipo, wallet_address, badge_level)
-         VALUES ($1, $2, $3, 'agricultor', $4, 'verificado')
+        `INSERT INTO usuarios (email, password_hash, nombre, rfc, tipo, wallet_address, badge_level)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id`,
-        [ag.email, password_hash, ag.nombre, ag.wallet]
+        [ag.email, password_hash, ag.nombre, ag.rfc, 'agricultor', ag.wallet, 'verificado']
       );
       agricultoresIds.push(result.rows[0].id);
     }
@@ -42,20 +42,20 @@ const seed = async () => {
     // 2. CREAR EMPRESAS
     console.log('🏢 Creando empresas...');
     const empresas = [
-      { nombre: 'Coca-Cola México', email: 'sustentabilidad@cocacola.mx', wallet: 'GAKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Cemex Verde', email: 'verde@cemex.com', wallet: 'GBKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Bimbo Sustentable', email: 'carbon@bimbo.com', wallet: 'GCKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Walmart México', email: 'esg@walmart.mx', wallet: 'GDKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' },
-      { nombre: 'Microsoft México', email: 'sustainability@microsoft.mx', wallet: 'GEKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX' }
+      { nombre: 'Coca-Cola México', email: 'sustentabilidad@cocacola.mx', wallet: 'GAKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'CCM940825KP3' },
+      { nombre: 'Cemex Verde', email: 'verde@cemex.com', wallet: 'GBKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'CVE830612LM7' },
+      { nombre: 'Bimbo Sustentable', email: 'carbon@bimbo.com', wallet: 'GCKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'BIS910304NQ5' },
+      { nombre: 'Walmart México', email: 'esg@walmart.mx', wallet: 'GDKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'WME870719RT8' },
+      { nombre: 'Microsoft México', email: 'sustainability@microsoft.mx', wallet: 'GEKPQ7LZZXM6MFZJBHZWXM4NFZJBHZWXM4NFZJBHZWX', rfc: 'MIM950128XW1' }
     ];
 
     const empresasIds = [];
     for (const emp of empresas) {
       const result = await pool.query(
-        `INSERT INTO usuarios (email, password_hash, nombre, tipo, wallet_address)
-         VALUES ($1, $2, $3, 'empresa', $4)
+        `INSERT INTO usuarios (email, password_hash, nombre, rfc, tipo, wallet_address)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id`,
-        [emp.email, password_hash, emp.nombre, emp.wallet]
+        [emp.email, password_hash, emp.nombre, emp.rfc, 'empresa', emp.wallet]
       );
       empresasIds.push(result.rows[0].id);
     }
@@ -82,9 +82,9 @@ const seed = async () => {
     for (let i = 0; i < 20; i++) {
       const agricultor_id = agricultoresIds[i % agricultoresIds.length];
       const estado = estados[i % estados.length];
-      const hectareas = (Math.random() * 15 + 5).toFixed(2); // 5-20 hectáreas
-      const toneladas_co2 = (hectareas * (Math.random() * 3 + 5)).toFixed(2); // 5-8 ton/ha
-      const precio = (Math.random() * 4 + 16).toFixed(2); // $16-20 USD
+      const hectareas = (Math.random() * 15 + 5).toFixed(2);
+      const toneladas_co2 = (hectareas * (Math.random() * 3 + 5)).toFixed(2);
+      const precio = (Math.random() * 4 + 16).toFixed(2);
       const fecha_siembra = new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000);
 
       const result = await pool.query(
@@ -115,7 +115,6 @@ const seed = async () => {
       const empresa_id = empresasIds[i % empresasIds.length];
       const parcela_id = parcelasIds[i];
 
-      // Obtener info de parcela
       const parcelaResult = await pool.query(
         'SELECT toneladas_co2, precio_por_tonelada FROM parcelas WHERE id = $1',
         [parcela_id]
@@ -128,7 +127,6 @@ const seed = async () => {
       const precio_total = precio_subtotal + fee;
 
       const stellar_tx = `${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-      
       const fecha = new Date(Date.now() - Math.random() * 60 * 24 * 60 * 60 * 1000);
 
       await pool.query(
@@ -139,7 +137,6 @@ const seed = async () => {
         [empresa_id, parcela_id, toneladas, precio_total, fee, stellar_tx, fecha]
       );
 
-      // Actualizar parcela
       await pool.query(
         'UPDATE parcelas SET toneladas_vendidas = toneladas_vendidas + $1 WHERE id = $2',
         [toneladas, parcela_id]
@@ -149,12 +146,10 @@ const seed = async () => {
 
     // 5. ACTUALIZAR BADGES
     console.log('🎖️  Actualizando badges de agricultores...');
-    // Dar badge elite a los primeros 2
     await pool.query(
       'UPDATE usuarios SET badge_level = $1 WHERE id = ANY($2)',
       ['elite', [agricultoresIds[0], agricultoresIds[1]]]
     );
-    // Dar badge confiable a los siguientes 3
     await pool.query(
       'UPDATE usuarios SET badge_level = $1 WHERE id = ANY($2)',
       ['confiable', [agricultoresIds[2], agricultoresIds[3], agricultoresIds[4]]]
@@ -174,9 +169,14 @@ const seed = async () => {
     console.log(`Parcelas: ${parcelasIds.length}`);
     console.log(`Transacciones: 15`);
     console.log('\n📝 Credenciales de prueba:');
-    console.log('Email: juan@agricola.com');
-    console.log('Email: sustentabilidad@cocacola.mx');
-    console.log('Password: password123\n');
+    console.log('Agricultor:');
+    console.log('  Email: juan@agricola.com');
+    console.log('  Password: password123');
+    console.log('  RFC: PEGA850315HX2');
+    console.log('\nEmpresa:');
+    console.log('  Email: sustentabilidad@cocacola.mx');
+    console.log('  Password: password123');
+    console.log('  RFC: CCM940825KP3\n');
 
   } catch (error) {
     console.error('❌ Error en seed:', error);
