@@ -1,9 +1,9 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Leaf, Mail, Lock, User, MapPin, Briefcase, Building2, ArrowRight, AlertCircle, CheckCircle, Eye, EyeOff, Sprout, Calendar, DollarSign, TrendingUp } from 'lucide-react';
+import { Leaf, Mail, Lock, User, MapPin, Briefcase, Building2, ArrowRight, AlertCircle, CheckCircle, Eye, EyeOff, Sprout, Calendar, DollarSign } from 'lucide-react';
 import { apiClient, storage, getRandomFoto } from '@/lib/api';
-import { UserType, RegisterAgricultorDTO, RegisterEmpresaDTO } from '@/types';
+import { UserType, RegisterAgricultorDTO, RegisterEmpresaDTO, CreateParcelaDTO } from '@/types';
 import Link from 'next/link';
 
 type AuthMode = 'login' | 'register';
@@ -34,7 +34,6 @@ export default function AuthPage() {
     ubicacion_lng: '',
     fecha_siembra: '',
   });
-
 
   const config = {
     agricultor: {
@@ -101,8 +100,8 @@ export default function AuthPage() {
         setError('El nombre es requerido');
         return false;
       }
-      if (userType === 'empresa' && !formData.rfc) {
-        setError('El RFC es requerido');
+      if (!formData.rfc) {
+        setError(userType === 'empresa' ? 'El RFC es requerido' : 'El RFC/CURP es requerido');
         return false;
       }
     }
@@ -177,11 +176,39 @@ export default function AuthPage() {
     setError('');
 
     try {
-      const data: RegisterAgricultorDTO = {
+      // PASO 1: Registro del usuario
+      setSuccess('Creando tu cuenta...');
+      
+      const registroData: RegisterAgricultorDTO = {
         email: formData.email,
         password: formData.password,
         nombre: formData.nombre,
+        rfc: formData.rfc, // ✅ IMPORTANTE: Ahora incluimos el RFC
         tipo: 'agricultor',
+      };
+
+      console.log('📤 Enviando registro:', registroData);
+      const registroResponse = await apiClient.register(registroData);
+      console.log('✅ Registro exitoso:', registroResponse);
+      
+      // PASO 2: Hacer login inmediatamente para obtener el token JWT
+      setSuccess('Autenticando...');
+      
+      const loginResponse = await apiClient.login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      console.log('✅ Login exitoso, token obtenido');
+
+      // Guardar token y usuario en cookies
+      storage.setToken(loginResponse.token);
+      storage.setUser(loginResponse.user);
+
+      // PASO 3: Crear la parcela con el token JWT ya guardado
+      setSuccess('Registrando tu parcela...');
+      
+      const parcelaData: CreateParcelaDTO = {
         hectareas: parseFloat(formData.hectareas),
         toneladas_co2: parseFloat(formData.toneladas_co2),
         precio_por_tonelada: parseFloat(formData.precio_por_tonelada),
@@ -192,10 +219,24 @@ export default function AuthPage() {
         fecha_siembra: formData.fecha_siembra,
       };
 
-      const response = await apiClient.register(data);
+      console.log('📤 Enviando datos de parcela:', parcelaData);
+      const parcelaResponse = await apiClient.createParcela(parcelaData);
+      console.log('✅ Parcela creada:', parcelaResponse);
 
-      storage.setToken(response.token);
-      storage.setUser(response.user);
+      const updatedUser = {
+        ...loginResponse.user,
+        hectareas: parseFloat(formData.hectareas),
+        toneladas_co2: parseFloat(formData.toneladas_co2),
+        precio_por_tonelada: parseFloat(formData.precio_por_tonelada),
+        ubicacion_estado: formData.ubicacion_estado,
+        ubicacion_lat: parseFloat(formData.ubicacion_lat),
+        ubicacion_lng: parseFloat(formData.ubicacion_lng),
+        foto_url: getRandomFoto(),
+        fecha_siembra: formData.fecha_siembra,
+      };
+      
+      storage.setUser(updatedUser);
+      console.log('✅ Usuario actualizado en cookies:', updatedUser);
 
       setSuccess('¡Registro exitoso! Redirigiendo...');
 
@@ -204,6 +245,9 @@ export default function AuthPage() {
       }, 1500);
 
     } catch (err: any) {
+      console.error('❌ Error en registro:', err);
+      // Limpiar tokens si algo falla
+      storage.clear();
       setError(err.message || 'Error al registrar');
     } finally {
       setIsLoading(false);
@@ -312,39 +356,39 @@ export default function AuthPage() {
 
           <div className="w-full">
             <div className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl rounded-2xl md:rounded-3xl p-6 md:p-8 border border-white/20 shadow-2xl">
-              
-                <div className="flex bg-black/30 rounded-xl p-1 mb-6 gap-1">
-                  <button
-                    onClick={() => {
-                      setUserType('agricultor');
-                      setRegisterStep(1);
-                    }}
-                    className={`flex-1 py-3 rounded-lg font-bold transition-all ${userType === 'agricultor'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg'
-                      : 'text-white/60 hover:text-white'
-                      }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Sprout className="w-4 h-4 md:w-5 md:h-5" />
-                      <span className="text-sm md:text-base">Agricultor</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setUserType('empresa');
-                      setRegisterStep(1);
-                    }}
-                    className={`flex-1 py-3 rounded-lg font-bold transition-all ${userType === 'empresa'
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
-                      : 'text-white/60 hover:text-white'
-                      }`}
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Briefcase className="w-4 h-4 md:w-5 md:h-5" />
-                      <span className="text-sm md:text-base">Empresa</span>
-                    </div>
-                  </button>
-                </div>
+
+              <div className="flex bg-black/30 rounded-xl p-1 mb-6 gap-1">
+                <button
+                  onClick={() => {
+                    setUserType('agricultor');
+                    setRegisterStep(1);
+                  }}
+                  className={`flex-1 py-3 rounded-lg font-bold transition-all ${userType === 'agricultor'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg'
+                    : 'text-white/60 hover:text-white'
+                    }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Sprout className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-sm md:text-base">Agricultor</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setUserType('empresa');
+                    setRegisterStep(1);
+                  }}
+                  className={`flex-1 py-3 rounded-lg font-bold transition-all ${userType === 'empresa'
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
+                    : 'text-white/60 hover:text-white'
+                    }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Briefcase className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-sm md:text-base">Empresa</span>
+                  </div>
+                </button>
+              </div>
 
               <div className="flex mb-6">
                 <button
@@ -388,6 +432,7 @@ export default function AuthPage() {
               )}
 
               {/* PASO 1 o LOGIN */}
+              {/* PASO 1 o LOGIN */}
               {(authMode === 'login' || registerStep === 1) && (
                 <div className="space-y-4">
                   {authMode === 'register' && (
@@ -424,9 +469,11 @@ export default function AuthPage() {
                     </div>
                   </div>
 
-                  {authMode === 'register' && userType === 'empresa' && (
+                  {authMode === 'register' && (
                     <div>
-                      <label className="block text-white text-sm font-medium mb-2">RFC</label>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        {userType === 'empresa' ? 'RFC' : 'RFC o CURP'}
+                      </label>
                       <div className="relative">
                         <Building2 className={`absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-${activeConfig.theme.primary}-400`} />
                         <input
@@ -434,7 +481,7 @@ export default function AuthPage() {
                           name="rfc"
                           value={formData.rfc}
                           onChange={handleInputChange}
-                          placeholder="ABC123456XYZ"
+                          placeholder={userType === 'empresa' ? 'ABC123456XYZ' : 'CURP o RFC'}
                           className="w-full pl-10 md:pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 text-sm md:text-base uppercase"
                         />
                       </div>
@@ -559,7 +606,6 @@ export default function AuthPage() {
                     <div className="relative">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
                       <select
-
                         name="ubicacion_estado"
                         value={formData.ubicacion_estado}
                         onChange={handleInputChange}
@@ -598,7 +644,6 @@ export default function AuthPage() {
                         <option value="Yucatán">Yucatán</option>
                         <option value="Zacatecas">Zacatecas</option>
                       </select>
-
                     </div>
                   </div>
 
@@ -668,7 +713,6 @@ export default function AuthPage() {
                   </div>
                 </div>
               )}
-
               <div className="mt-6 text-center text-sm text-white/60">
                 {authMode === 'login' ? (
                   <p>
