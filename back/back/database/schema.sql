@@ -115,3 +115,50 @@ CREATE TRIGGER set_parcelas_updated_at
 BEFORE UPDATE ON parcelas
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at();
+
+-- AGREGAR AL FINAL DE schema.sql:
+
+-- Tabla para registrar compras de tokens
+CREATE TABLE IF NOT EXISTS compras (
+  id SERIAL PRIMARY KEY,
+  empresa_id INTEGER NOT NULL REFERENCES usuarios(id),
+  empresa_wallet VARCHAR(100),
+  agricultor_id INTEGER NOT NULL REFERENCES usuarios(id),
+  agricultor_wallet VARCHAR(100),
+  toneladas INTEGER NOT NULL,
+  precio_total DECIMAL(10, 2),
+  stellar_tx_hash VARCHAR(100) UNIQUE NOT NULL,
+  fecha_compra TIMESTAMP DEFAULT NOW(),
+  estado VARCHAR(20) DEFAULT 'completada',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Tabla para registrar minteos de tokens
+CREATE TABLE IF NOT EXISTS minteos (
+  id SERIAL PRIMARY KEY,
+  agricultor_id INTEGER NOT NULL REFERENCES usuarios(id),
+  parcela_id INTEGER REFERENCES parcelas(id),
+  toneladas INTEGER NOT NULL,
+  stellar_tx_hash VARCHAR(100) UNIQUE NOT NULL,
+  fecha_minteo TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Tabla para registrar badges NFT
+CREATE TABLE IF NOT EXISTS badges (
+  id SERIAL PRIMARY KEY,
+  agricultor_id INTEGER NOT NULL REFERENCES usuarios(id),
+  badge_type VARCHAR(20) NOT NULL,
+  stellar_tx_hash VARCHAR(100) UNIQUE NOT NULL,
+  fecha_otorgado TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Índices blockchain
+CREATE INDEX idx_compras_empresa ON compras(empresa_id);
+CREATE INDEX idx_compras_agricultor ON compras(agricultor_id);
+CREATE INDEX idx_compras_tx_hash ON compras(stellar_tx_hash);
+CREATE INDEX idx_minteos_agricultor ON minteos(agricultor_id);
+CREATE INDEX idx_minteos_tx_hash ON minteos(stellar_tx_hash);
+CREATE INDEX idx_badges_agricultor ON badges(agricultor_id);
+CREATE INDEX idx_badges_tx_hash ON badges(stellar_tx_hash);

@@ -40,6 +40,9 @@ app.use('/api/usuarios', usuarioRoutes);
 const parcelaRoutes = require('./routes/parcela.routes');
 app.use('/api/parcelas',parcelaRoutes)
 
+  const blockchainRoutes = require('./routes/blockchain.routes');
+  app.use('/api/blockchain', blockchainRoutes);
+
 try {
   const marketplaceRoutes = require('./routes/marketplace.routes');
   app.use('/api/marketplace', marketplaceRoutes);
