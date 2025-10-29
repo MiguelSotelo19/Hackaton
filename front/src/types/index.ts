@@ -15,6 +15,8 @@ export interface RegisterAgricultorDTO {
   ubicacion_lng: number;
   foto_url: string;
   fecha_siembra: string;
+  rfc: string; // ✅ RFC obligatorio (puede ser CURP para agricultores)
+  // Nota: Ya NO incluimos los datos de parcela aquí
 }
 
 export interface RegisterEmpresaDTO {
@@ -23,6 +25,17 @@ export interface RegisterEmpresaDTO {
   nombre: string;
   rfc: string;
   tipo: 'empresa';
+}
+
+export interface CreateParcelaDTO {
+  hectareas: number;
+  toneladas_co2: number;
+  precio_por_tonelada: number;
+  ubicacion_estado: string;
+  ubicacion_lat: number;
+  ubicacion_lng: number;
+  foto_url: string;
+  fecha_siembra: string;
 }
 
 export interface LoginDTO {
@@ -49,7 +62,9 @@ export interface User {
   ubicacion_lng?: number;
   foto_url?: string;
   fecha_siembra?: string;
-  createdAt: string;
+  badge_level?: string;
+  wallet_address?: string | null;
+  createdAt?: string;
 }
 
 export interface ApiError {
@@ -60,40 +75,39 @@ export interface ApiError {
 // ===== BLOCKCHAIN TYPES =====
 
 export interface BlockchainConfig {
-  contractId: string;
   network: string;
+  contractAddress: string;
   rpcUrl: string;
-  explorerUrl: string;
 }
 
 export interface CompraBlockchainDTO {
-  stellar_tx_hash: string;
-  comprador_wallet: string;
-  vendedor_wallet: string;
-  cantidad_tokens: number;
+  empresa_id: number;
+  parcela_id: number;
+  toneladas: number;
   precio_total: number;
-  parcela_id?: number;
+  tx_hash: string;
 }
 
 export interface MintBlockchainDTO {
-  stellar_tx_hash: string;
-  destinatario_wallet: string;
-  cantidad_tokens: number;
-  parcela_id?: number;
+  parcela_id: number;
+  toneladas: number;
+  tx_hash: string;
 }
 
 export interface BadgeBlockchainDTO {
-  stellar_tx_hash: string;
-  wallet_address: string;
-  badge_level: 'nuevo' | 'verificado' | 'confiable' | 'elite';
-  motivo?: string;
+  usuario_id: number;
+  badge_level: string;
+  tx_hash: string;
 }
 
 export interface VerificarTransaccionResponse {
-  existe: boolean;
-  tipo?: 'compra' | 'minteo' | 'badge';
-  fecha?: string;
-  detalles?: any;
+  success: boolean;
+  transaction: {
+    hash: string;
+    status: string;
+    blockNumber: number;
+    timestamp: number;
+  };
 }
 
 // Para el componente de compra

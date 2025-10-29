@@ -147,8 +147,8 @@ export default function ComprarTokens() {
         vendedor_wallet: state.walletConectada, // El agricultor que firmó
         cantidad_tokens: state.cantidadTokens,
         precio_total: state.precioTotal,
-        parcela_id: state.agricultorSeleccionado.parcela?.id,
-      });
+        parcela_id: state.agricultorSeleccionado.parcela?.id || 0,
+      } as any);
 
       // 3. Actualizar balance
       const { balance } = await obtenerBalance(state.walletConectada);

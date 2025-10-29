@@ -1,4 +1,6 @@
 // src/lib/api.ts
+
+import Cookies from 'js-cookie';
 import {
   RegisterAgricultorDTO,
   RegisterEmpresaDTO,
@@ -11,9 +13,18 @@ import {
   MintBlockchainDTO,
   BadgeBlockchainDTO,
   VerificarTransaccionResponse,
+  CreateParcelaDTO,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+// Configuración de cookies
+const COOKIE_CONFIG = {
+  expires: 7, // 7 días
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  path: '/',
+};
 
 class ApiClient {
   private baseURL: string;
@@ -28,10 +39,15 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
+    // Obtener token de cookies para requests autenticados
+    const token = storage.getToken();
+    
     const config: RequestInit = {
       ...options,
+      credentials: 'include', // Importante para cookies
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
     };
@@ -62,17 +78,29 @@ class ApiClient {
   // ===== AUTH ENDPOINTS =====
   
   async register(data: RegisterAgricultorDTO | RegisterEmpresaDTO): Promise<AuthResponse> {
-    return this.request<AuthResponse>('/api/auth/register', {
+    const response = await this.request<any>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+
+    // Normalizar respuesta del backend (usuario -> user)
+    return {
+      token: response.token,
+      user: response.usuario || response.user,
+    };
   }
 
   async login(data: LoginDTO): Promise<AuthResponse> {
-    return this.request<AuthResponse>('/api/auth/login', {
+    const response = await this.request<any>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+
+    // Normalizar respuesta del backend (usuario -> user)
+    return {
+      token: response.token,
+      user: response.usuario || response.user,
+    };
   }
 
   async getProfile(token: string): Promise<User> {
@@ -81,6 +109,25 @@ class ApiClient {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+  }
+
+  async logout(): Promise<void> {
+    try {
+      await this.request('/api/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Error al hacer logout en el servidor:', error);
+    }
+  }
+
+  // ===== PARCELA ENDPOINTS =====
+
+  async createParcela(data: CreateParcelaDTO): Promise<{ message: string; parcela: any }> {
+    return this.request('/api/parcelas/', {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 
@@ -122,52 +169,47 @@ class ApiClient {
 
 export const apiClient = new ApiClient();
 
-// Storage helpers
+// Storage helpers con COOKIES
 export const storage = {
   setToken: (token: string) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('agrocane_token', token);
-    }
+    Cookies.set('agrocane_token', token, COOKIE_CONFIG);
   },
   
   getToken: (): string | null => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('agrocane_token');
-    }
-    return null;
+    return Cookies.get('agrocane_token') || null;
   },
   
   removeToken: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('agrocane_token');
-    }
+    Cookies.remove('agrocane_token', { path: '/' });
   },
   
   setUser: (user: User) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('agrocane_user', JSON.stringify(user));
-    }
+    // Guardar user en cookie como JSON string
+    Cookies.set('agrocane_user', JSON.stringify(user), COOKIE_CONFIG);
   },
   
   getUser: (): User | null => {
-    if (typeof window !== 'undefined') {
-      const user = localStorage.getItem('agrocane_user');
-      return user ? JSON.parse(user) : null;
+    try {
+      const userCookie = Cookies.get('agrocane_user');
+      if (!userCookie) return null;
+      
+      const user = JSON.parse(userCookie);
+      return user;
+    } catch (error) {
+      console.error('Error al parsear user de cookie:', error);
+      // Limpiar cookie corrupta
+      Cookies.remove('agrocane_user', { path: '/' });
+      return null;
     }
-    return null;
   },
   
   removeUser: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('agrocane_user');
-    }
+    Cookies.remove('agrocane_user', { path: '/' });
   },
   
   clear: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('agrocane_token');
-      localStorage.removeItem('agrocane_user');
-    }
+    Cookies.remove('agrocane_token', { path: '/' });
+    Cookies.remove('agrocane_user', { path: '/' });
   }
 };
 
