@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Leaf, TrendingUp, Globe, Shield, Users, Zap, ArrowRight, CheckCircle, MapPin, DollarSign, BarChart3, Sparkles, Award, Target, Clock, FileCheck, Briefcase, Sprout, Package } from 'lucide-react';
+import { Leaf, TrendingUp, Globe, Shield, Users, Zap, ArrowRight, CheckCircle, MapPin, DollarSign, BarChart3, Sparkles, Award, Target, Clock, FileCheck, Briefcase, Sprout, Package, X, Calculator, ChevronDown, ChevronUp, Car, Trees } from 'lucide-react';
 
 type UserType = 'agricultor' | 'empresa';
 
@@ -9,6 +9,11 @@ export default function LandingPage() {
   const [counter, setCounter] = useState({ parcelas: 0, co2: 0, empresas: 0 });
   const [isVisible, setIsVisible] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [calcValue, setCalcValue] = useState('');
+  const [calcResult, setCalcResult] = useState({ tokens: 0, money: 0, cars: 0, trees: 0 });
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -31,8 +36,17 @@ export default function LandingPage() {
         clearInterval(timer);
       }
     }, interval);
+
+    const handleScroll = () => {
+      setShowStickyCTA(window.scrollY > 800);
+    };
+
+    window.addEventListener('scroll', handleScroll);
     
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const handleUserTypeChange = (type: UserType) => {
@@ -42,6 +56,34 @@ export default function LandingPage() {
       setUserType(type);
       setIsTransitioning(false);
     }, 300);
+  };
+
+  const calculateResults = (value: string) => {
+    const num = parseFloat(value) || 0;
+    if (userType === 'agricultor') {
+      const tokens = Math.round(num * 20);
+      const money = tokens * 30;
+      setCalcResult({ tokens, money, cars: 0, trees: Math.round(num * 450) });
+    } else {
+      const money = num * 30;
+      const cars = Math.ceil(num * 0.22);
+      const trees = Math.round(num * 45);
+      setCalcResult({ tokens: Math.round(num), money, cars, trees });
+    }
+  };
+
+  const handleCalcChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCalcValue(value);
+    calculateResults(value);
+  };
+
+  const scrollToSection = () => {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  };
+
+  const goToLogin = () => {
+    window.location.href = '/login';
   };
 
   const config = {
@@ -131,6 +173,24 @@ export default function LandingPage() {
           color: 'blue',
         },
       ],
+      faqs: [
+        {
+          q: '¿Necesito escrituras para registrar mi parcela?',
+          a: 'No necesariamente. Aceptamos diferentes tipos de documentos de propiedad o posesión. Nuestro equipo evalúa cada caso individualmente para encontrar la mejor solución.'
+        },
+        {
+          q: '¿Cuánto tiempo tardo en recibir mis pagos?',
+          a: 'Una vez que una empresa compra tus tokens, el pago se procesa en 5~10 segundos y se deposita directamente en tu cuenta bancaria o billetera digital.'
+        },
+        {
+          q: '¿Hay algún costo por registrarme?',
+          a: 'El registro es 100% gratuito. Solo cobramos una comisión del 5% cuando vendes tus tokens, es decir, solo ganamos cuando tú ganas.'
+        },
+        {
+          q: '¿Cómo verifican que mi caña realmente captura CO₂?',
+          a: 'Usamos metodología certificada ISO 14064 con datos satelitales, fotos geolocalizadas y auditorías aleatorias en campo. Todo verificado por terceros independientes.'
+        }
+      ]
     },
     empresa: {
       theme: {
@@ -147,7 +207,7 @@ export default function LandingPage() {
         titleHighlight: 'Impacto Real',
         description: 'Compensa las emisiones de tu empresa con créditos verificados de agricultores mexicanos. Blockchain garantiza transparencia total y reportes automáticos para tus stakeholders.',
         ctaMain: 'Comprar Créditos',
-        ctaSecondary: 'Ver Dashboard Demo',
+        ctaSecondary: 'Ver Calculadora',
         statsTitle: 'Compensación promedio:',
         statsValue: '500 ton CO₂',
         statsSubtext: 'Equivale a 110 autos fuera de circulación',
@@ -155,7 +215,7 @@ export default function LandingPage() {
       },
       benefits: [
         { icon: CheckCircle, text: 'Créditos certificados ISO 14064' },
-        { icon: CheckCircle, text: 'Reportes automáticos para ESG' },
+        { icon: CheckCircle, text: 'Reportes para ESG' },
         { icon: CheckCircle, text: 'Trazabilidad blockchain' },
         { icon: CheckCircle, text: 'Impacto social medible' },
       ],
@@ -218,6 +278,24 @@ export default function LandingPage() {
           color: 'purple',
         },
       ],
+      faqs: [
+        {
+          q: '¿Los créditos son certificados internacionalmente?',
+          a: 'Sí, todos nuestros créditos siguen el estándar ISO 14064 y son auditados por terceros independientes. Son válidos para reportes ESG y GRI.'
+        },
+        {
+          q: '¿Puedo rastrear el origen de cada crédito?',
+          a: 'Absolutamente. Cada token está registrado en blockchain Stellar con información completa: agricultor, ubicación GPS, fecha de captura y certificaciones.'
+        },
+        {
+          q: '¿Cuánto cuestan los créditos de carbono?',
+          a: 'El precio promedio es $30 USD por tonelada de CO₂. Es competitivo vs mercados internacionales y el 95% va directamente al agricultor.'
+        },
+        {
+          q: '¿Generan reportes para nuestros stakeholders?',
+          a: 'Sí, tu dashboard genera reportes automáticos en PDF con certificados, métricas de impacto, equivalencias visuales y gráficas listas para presentar. [NO IMPLEMENTADO EN ESTA VERSIÓN]'
+        }
+      ]
     },
   };
 
@@ -230,6 +308,18 @@ export default function LandingPage() {
         <div className={`absolute bottom-20 right-10 w-96 h-96 bg-${activeConfig.theme.secondary}-500/10 rounded-full blur-3xl animate-pulse`} style={{ animationDelay: '1s' }}></div>
         <div className={`absolute top-1/2 left-1/2 w-64 h-64 bg-${activeConfig.theme.primary}-500/10 rounded-full blur-3xl animate-pulse`} style={{ animationDelay: '2s' }}></div>
       </div>
+
+      {showStickyCTA && (
+        <div className="fixed bottom-8 right-8 z-50 animate-bounce">
+          <button 
+            onClick={goToLogin}
+            className={`px-8 py-4 bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white rounded-full font-bold text-lg transition-all shadow-2xl shadow-${activeConfig.theme.glowColor}/50 flex items-center gap-2`}
+          >
+            {activeConfig.hero.ctaMain}
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       <nav className="relative z-50 bg-black/20 backdrop-blur-xl border-b border-white/10">
         <div className="container mx-auto px-6 py-4">
@@ -248,10 +338,16 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all border border-white/10 font-medium">
+              <button 
+                onClick={goToLogin}
+                className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all border border-white/10 font-medium"
+              >
                 Iniciar Sesión
               </button>
-              <button className={`px-5 py-2.5 bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white rounded-xl transition-all font-semibold shadow-lg shadow-${activeConfig.theme.glowColor}/30 flex items-center gap-2`}>
+              <button 
+                onClick={goToLogin}
+                className={`px-5 py-2.5 bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white rounded-xl transition-all font-semibold shadow-lg shadow-${activeConfig.theme.glowColor}/30 flex items-center gap-2`}
+              >
                 Comenzar Ahora
                 <ArrowRight className="w-4 h-4" />
               </button>
@@ -319,12 +415,18 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className={`group flex-1 px-8 py-5 bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-2xl shadow-${activeConfig.theme.glowColor}/50 flex items-center justify-center gap-2`}>
+              <button 
+                onClick={goToLogin}
+                className={`group flex-1 px-8 py-5 bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-2xl shadow-${activeConfig.theme.glowColor}/50 flex items-center justify-center gap-2`}
+              >
                 {activeConfig.hero.ctaMain}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
               
-              <button className="flex-1 px-8 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold text-lg transition-all border-2 border-white/20">
+              <button 
+                onClick={() => setShowCalculator(true)}
+                className="flex-1 px-8 py-5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold text-lg transition-all border-2 border-white/20"
+              >
                 {activeConfig.hero.ctaSecondary}
               </button>
             </div>
@@ -405,7 +507,10 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <button className={`w-full bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white font-bold py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-${activeConfig.theme.glowColor}/30 flex items-center justify-center gap-2`}>
+                <button 
+                  onClick={goToLogin}
+                  className={`w-full bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white font-bold py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-${activeConfig.theme.glowColor}/30 flex items-center justify-center gap-2`}
+                >
                   {activeConfig.hero.ctaMain}
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -465,6 +570,43 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className={`relative z-10 container mx-auto px-6 py-20 transition-opacity duration-300 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+        <div className="text-center mb-12">
+          <h2 className="text-4xl lg:text-5xl font-black text-white mb-4">
+            Preguntas Frecuentes
+          </h2>
+          <p className="text-xl text-white/80">
+            Todo lo que necesitas saber sobre {userType === 'agricultor' ? 'tokenizar tu parcela' : 'compensar emisiones'}
+          </p>
+        </div>
+
+        <div className="max-w-3xl mx-auto space-y-4">
+          {activeConfig.faqs.map((faq, idx) => (
+            <div
+              key={idx}
+              className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl border border-white/20 overflow-hidden transition-all hover:border-white/40"
+            >
+              <button
+                onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                className="w-full px-6 py-5 flex items-center justify-between text-left"
+              >
+                <span className="text-lg font-bold text-white pr-4">{faq.q}</span>
+                {expandedFaq === idx ? (
+                  <ChevronUp className={`w-6 h-6 text-${activeConfig.theme.primary}-400 flex-shrink-0`} />
+                ) : (
+                  <ChevronDown className={`w-6 h-6 text-${activeConfig.theme.primary}-400 flex-shrink-0`} />
+                )}
+              </button>
+              {expandedFaq === idx && (
+                <div className="px-6 pb-5">
+                  <p className="text-white/80 leading-relaxed">{faq.a}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="relative z-10 bg-gradient-to-r from-black/40 to-black/30 backdrop-blur-xl border-y border-white/10 py-12">
         <div className="container mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-12">
@@ -502,11 +644,17 @@ export default function LandingPage() {
               : 'Únete a empresas líderes que ya están alcanzando carbono neutral'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="group px-10 py-5 bg-white text-black font-bold text-lg rounded-xl transition-all transform hover:scale-105 shadow-xl flex items-center justify-center gap-2">
+            <button 
+              onClick={goToLogin}
+              className="group px-10 py-5 bg-white text-black font-bold text-lg rounded-xl transition-all transform hover:scale-105 shadow-xl flex items-center justify-center gap-2"
+            >
               {activeConfig.hero.ctaMain}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="px-10 py-5 bg-white/10 hover:bg-white/20 text-white font-bold text-lg rounded-xl transition-all border-2 border-white/30">
+            <button 
+              onClick={() => setShowCalculator(true) }
+              className="px-10 py-5 bg-white/10 hover:bg-white/20 text-white font-bold text-lg rounded-xl transition-all border-2 border-white/30"
+            >
               {activeConfig.hero.ctaSecondary}
             </button>
           </div>
@@ -537,6 +685,116 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      {/* Modal Calculadora */}
+      {showCalculator && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center pt-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className={`bg-gradient-to-br from-${activeConfig.theme.primary}-950 to-black/95 rounded-3xl p-8 max-w-md w-full border border-${activeConfig.theme.primary}-400/30 shadow-2xl relative`}>
+            <button
+              onClick={() => {setShowCalculator(false); setCalcValue('')}}
+              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <div className="text-center mb-6">
+              
+              <h3 className="text-3xl font-black text-white mb-2">
+                {userType === 'agricultor' ? '¿Cuánto Puedo Ganar?' : '¿Cuánto Necesito Compensar?'}
+              </h3>
+              <p className="text-white/70">
+                {userType === 'agricultor' 
+                  ? 'Calcula tus ingresos anuales estimados'
+                  : 'Calcula el costo de tu compensación'}
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">
+                  {userType === 'agricultor' ? 'Hectáreas de caña' : 'Toneladas CO₂ a compensar'}
+                </label>
+                <input
+                  type="number"
+                  value={calcValue}
+                  onChange={handleCalcChange}
+                  placeholder={userType === 'agricultor' ? '10' : '500'}
+                  className={`w-full px-4 py-4 bg-white/5 border border-${activeConfig.theme.primary}-400/30 rounded-xl text-white text-2xl font-bold placeholder-white/40 focus:outline-none focus:border-${activeConfig.theme.primary}-400 transition-all`}
+                />
+              </div>
+
+              {calcValue && (
+                <div className="space-y-4 animate-fadeIn">
+                  {userType === 'agricultor' ? (
+                    <>
+                      <div className={`bg-gradient-to-r ${activeConfig.theme.gradient}/20 border border-${activeConfig.theme.primary}-400/30 rounded-xl p-5`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">Tokens generados/año</span>
+                          <Sparkles className={`w-5 h-5 text-${activeConfig.theme.primary}-400`} />
+                        </div>
+                        <p className="text-4xl font-black text-white">{calcResult.tokens.toLocaleString()}</p>
+                      </div>
+
+                      <div className={`bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30 rounded-xl p-5`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">Ingreso anual estimado</span>
+                          <DollarSign className="w-5 h-5 text-green-400" />
+                        </div>
+                        <p className="text-4xl font-black text-white">${calcResult.money.toLocaleString()} USD</p>
+                      </div>
+
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">Equivalente ambiental</span>
+                          <Trees className="w-5 h-5 text-green-400" />
+                        </div>
+                        <p className="text-2xl font-bold text-white">{calcResult.trees.toLocaleString()} árboles protegidos</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className={`bg-gradient-to-r ${activeConfig.theme.gradient}/20 border border-${activeConfig.theme.primary}-400/30 rounded-xl p-5`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">Costo estimado</span>
+                          <DollarSign className={`w-5 h-5 text-${activeConfig.theme.primary}-400`} />
+                        </div>
+                        <p className="text-4xl font-black text-white">${calcResult.money.toLocaleString()} USD</p>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-400/30 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">Equivalente a sacar de circulación</span>
+                          <Car className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <p className="text-3xl font-black text-white">{calcResult.cars} autos/año</p>
+                      </div>
+
+                      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-white/70 text-sm">Impacto equivalente</span>
+                          <Trees className="w-5 h-5 text-green-400" />
+                        </div>
+                        <p className="text-2xl font-bold text-white">{calcResult.trees.toLocaleString()} árboles plantados</p>
+                      </div>
+                    </>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setShowCalculator(false);
+                      goToLogin();
+                    }}
+                    className={`w-full py-4 bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white font-bold rounded-xl transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2`}
+                  >
+                    {activeConfig.hero.ctaMain}
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         @keyframes float {
           0%, 100% {
@@ -549,6 +807,21 @@ export default function LandingPage() {
         
         .animate-float {
           animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
         }
       `}</style>
     </div>

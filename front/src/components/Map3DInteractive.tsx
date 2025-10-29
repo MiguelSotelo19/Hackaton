@@ -183,8 +183,8 @@ export default function Map3DInteractive({ parcelas, onParcelaSelect, onAddToCar
             )}
 
             {selectedParcela && (
-                <div className="absolute bottom-0 left-0 right-0 md:bottom-1 md:top-4 md:right-4 md:left-auto md:w-96 bg-white rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden z-40 animate-slideUp md:animate-slideIn max-h-[85vh] overflow-y-auto">
-                    <div className="relative h-48 md:h-56">
+                <div className="fixed inset-x-0 sm:pt-5 md:pt-0 md:absolute bottom-0 left-0 right-0 md:bottom-1 md:top-4 md:right-4 md:left-auto md:w-96 bg-white rounded-t-3xl md:rounded-2xl shadow-2xl overflow-hidden z-40 animate-slideUp md:animate-slideIn max-h-[85vh] overflow-y-auto ">
+                    <div className="relative h-48 md:h-56 ">
                         <img src={selectedParcela.foto} alt="Parcela" className="w-full h-full object-cover" />
                         <button
                             onClick={handleClose}

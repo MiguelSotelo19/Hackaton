@@ -268,7 +268,6 @@ export default function MapaPage() {
         />
       </div>
 
-      {/* Modal Filtros - Mobile First */}
       {showFilters && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-6">
           <div className="bg-gradient-to-br from-blue-900/95 to-indigo-900/95 backdrop-blur-xl rounded-t-3xl md:rounded-3xl w-full md:max-w-md p-6 md:p-8 max-h-[90vh] overflow-y-auto">
@@ -374,7 +373,6 @@ export default function MapaPage() {
         </div>
       )}
 
-      {/* Modal Asistente IA */}
       {showAssistant && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-6">
           <div className="bg-gradient-to-br from-purple-900/95 to-pink-900/95 backdrop-blur-xl rounded-t-3xl md:rounded-3xl w-full md:max-w-md p-6 md:p-8">
@@ -435,7 +433,6 @@ export default function MapaPage() {
         </div>
       )}
 
-      {/* Modal Carrito */}
       {showCart && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-6">
           <div className="bg-gradient-to-br from-blue-900/95 to-indigo-900/95 backdrop-blur-xl rounded-t-3xl md:rounded-3xl w-full md:max-w-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
