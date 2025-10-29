@@ -163,7 +163,7 @@ export class StellarClient {
         console.log('Transacción pendiente, esperando confirmación...');
         
         // Polling simple sin getTransaction (evita el error)
-        const maxAttempts = 5;
+        const maxAttempts = 1;
         let attempts = 0;
         
         while (attempts < maxAttempts) {
