@@ -5,10 +5,10 @@ const { pool } = require('../config/Database');
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key';
 
 exports.register = async (req, res) => {
-  const { email, password, nombre, tipo } = req.body;
+  const { email, password, nombre, rfc, tipo } = req.body;
 
   try {
-    if (!email || !password || !nombre || !tipo) {
+    if (!email || !password || !nombre || !rfc || !tipo) {
       return res.status(400).json({ error: 'Todos los campos son obligatorios' });
     }
 
@@ -24,10 +24,10 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO usuarios (email, password_hash, nombre, tipo)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, email, nombre, tipo, badge_level, wallet_address`,
-      [email, hashedPassword, nombre, tipo]
+      `INSERT INTO usuarios (email, password_hash, nombre,rfc, tipo)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, email, nombre, rfc, tipo, badge_level, wallet_address`,
+      [email, hashedPassword, nombre,rfc, tipo]
     );
 
     const usuario = result.rows[0];
@@ -83,6 +83,7 @@ exports.login = async (req, res) => {
         id: usuario.id,
         email: usuario.email,
         nombre: usuario.nombre,
+        rfc: usuario.rfc,
         tipo: usuario.tipo,
         badge_level: usuario.badge_level,
         wallet_address: usuario.wallet_address,
