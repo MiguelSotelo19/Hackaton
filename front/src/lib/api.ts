@@ -139,8 +139,11 @@ class ApiClient {
     });
   }
 
-  async guardarCompraBlockchain(data: CompraBlockchainDTO): Promise<{ message: string; compra: any }> {
+  async guardarCompraBlockchain(token: string, data: CompraBlockchainDTO): Promise<{ message: string; compra: any }> {
     return this.request('/api/blockchain/compra', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       method: 'POST',
       body: JSON.stringify(data),
     });

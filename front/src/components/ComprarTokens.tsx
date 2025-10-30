@@ -1,11 +1,11 @@
 // src/components/ComprarTokens.tsx
 'use client';
-
+import Cookies from 'js-cookie';
 import { useState, useEffect } from 'react';
 import { Wallet, Coins, ExternalLink, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { conectarFreighter, obtenerBalance, comprarTokens } from '@/lib/stellar-client';
 import { getExplorerTxUrl, STELLAR_CONFIG } from '@/lib/stellar-config';
-import { apiClient } from '@/lib/api';
+import { apiClient, storage } from '@/lib/api';
 import type { Agricultor, CompraState } from '@/types';
 
 // Agricultores mock (reemplazar con datos reales de tu API)
@@ -141,14 +141,20 @@ export default function ComprarTokens() {
       }
 
       // 2. Guardar en backend
-      await apiClient.guardarCompraBlockchain({
-        stellar_tx_hash: txHash,
-        comprador_wallet: empresaDestino,
-        vendedor_wallet: state.walletConectada, // El agricultor que firmó
-        cantidad_tokens: state.cantidadTokens,
-        precio_total: state.precioTotal,
-        parcela_id: state.agricultorSeleccionado.parcela?.id || 0,
-      } as any);
+      const token = Cookies.get('agrocane_token');
+      if (!token) {
+        console.warn('No hay token, guardado en backend omitido');
+      } else {
+        await apiClient.guardarCompraBlockchain(token, {
+          empresa_id: 1, // ID fijo para demo
+          empresa_wallet: 'GA4D7WA54FHEXCFSDXWTQF2BAK3CNQEZZ4QHH3Z5ZMYO4AVAJ2FDDCNR',
+          agricultor_id: state.agricultorSeleccionado.id,
+          agricultor_wallet: state.agricultorSeleccionado.wallet_address,
+          toneladas: state.cantidadTokens,
+          precio_total: state.precioTotal,
+          stellar_tx_hash: txHash,
+        });
+      }
 
       // 3. Actualizar balance
       const { balance } = await obtenerBalance(state.walletConectada);

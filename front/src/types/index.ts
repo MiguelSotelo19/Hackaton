@@ -82,10 +82,12 @@ export interface BlockchainConfig {
 
 export interface CompraBlockchainDTO {
   empresa_id: number;
-  parcela_id: number;
+  empresa_wallet: string;
+  agricultor_id: number;
+  agricultor_wallet: string;
   toneladas: number;
   precio_total: number;
-  tx_hash: string;
+  stellar_tx_hash: string;
 }
 
 export interface MintBlockchainDTO {
