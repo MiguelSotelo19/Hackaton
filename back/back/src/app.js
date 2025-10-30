@@ -6,10 +6,15 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(cors({
+/*app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
   credentials: true
+}));*/
+app.use(cors({
+  origin: ['http://localhost:3001', 'http://localhost:3000'], // Agregar ambos puertos
+  credentials: true
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -37,8 +37,8 @@ export const PARCELAS_MOCK: Parcela[] = [
   },
   {
     id: 2,
-    nombre: "María",
-    apellido: "González López",
+    nombre: "Don Ramiro",
+    apellido: "Torres",
     hectareas: 8.3,
     co2_disponible: 163,
     lat: 18.8045,
@@ -53,8 +53,8 @@ export const PARCELAS_MOCK: Parcela[] = [
   },
   {
     id: 3,
-    nombre: "Carlos",
-    apellido: "Ramírez Torres",
+    nombre: "Don Ramiro",
+    apellido: "Torres",
     hectareas: 15.2,
     co2_disponible: 298,
     lat: 18.7920,
@@ -69,8 +69,8 @@ export const PARCELAS_MOCK: Parcela[] = [
   },
   {
     id: 4,
-    nombre: "Ana",
-    apellido: "López Martínez",
+    nombre: "Don Ramiro",
+    apellido: "Torres",
     hectareas: 6.8,
     co2_disponible: 134,
     lat: 18.8012,

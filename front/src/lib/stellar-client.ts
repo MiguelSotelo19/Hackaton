@@ -58,50 +58,45 @@ export class StellarClient {
 
   // 2. Obtener balance de tokens de una cuenta
   async obtenerBalance(accountId: string): Promise<BalanceResult> {
-    try {
-      // Crear la cuenta de Stellar
-      const account = new StellarSDK.Account(accountId, '0');
+  try {
+    const account = new StellarSDK.Account(accountId, '0');
+    const addressObj = new StellarSDK.Address(accountId);
 
-      // Construir argumentos usando Address
-      const addressObj = new StellarSDK.Address(accountId);
+    const operation = this.contract.call(
+      STELLAR_CONFIG.CONTRACT_FUNCTIONS.BALANCE,
+      addressObj.toScVal()
+    );
 
-      // Construir la operación para llamar a balance()
-      const operation = this.contract.call(
-        STELLAR_CONFIG.CONTRACT_FUNCTIONS.BALANCE,
-        addressObj.toScVal()
-      );
+    const transaction = new StellarSDK.TransactionBuilder(account, {
+      fee: STELLAR_CONFIG.FEE,
+      networkPassphrase: STELLAR_CONFIG.NETWORK_PASSPHRASE,
+    })
+      .addOperation(operation)
+      .setTimeout(STELLAR_CONFIG.TIMEOUT)
+      .build();
 
-      // Construir la transacción
-      const transaction = new StellarSDK.TransactionBuilder(account, {
-        fee: STELLAR_CONFIG.FEE,
-        networkPassphrase: STELLAR_CONFIG.NETWORK_PASSPHRASE,
-      })
-        .addOperation(operation)
-        .setTimeout(STELLAR_CONFIG.TIMEOUT)
-        .build();
+    const simulated = await this.sorobanServer.simulateTransaction(transaction);
 
-      // Simular la transacción (no la ejecutamos, solo leemos)
-      const simulated = await this.sorobanServer.simulateTransaction(transaction);
+    console.log('Simulación balance completa:', JSON.stringify(simulated, null, 2)); // VER TODO
 
-      // Verificar si la simulación fue exitosa
-      if (simulated.results && simulated.results.length > 0) {
-        const resultValue = simulated.results[0].retval;
-        if (resultValue) {
-          const balance = StellarSDK.scValToNative(resultValue);
-          return { balance: Number(balance) };
-        }
-      }
+    // Intentar diferentes estructuras de respuesta
+    let resultValue = simulated.results?.[0]?.retval || 
+                      simulated.result?.retval ||
+                      simulated.retval;
 
-      // Si no hay resultado, retornar 0
-      return { balance: 0 };
-    } catch (error: any) {
-      console.error('Error obteniendo balance:', error);
-      return {
-        balance: 0,
-        error: error.message || 'Error al consultar balance',
-      };
+    if (resultValue) {
+      const balance = StellarSDK.scValToNative(resultValue);
+      console.log('Balance obtenido:', balance);
+      return { balance: Number(balance) };
     }
+
+    console.warn('No se encontró retval en:', simulated);
+    return { balance: 0 };
+  } catch (error: any) {
+    console.error('Error obteniendo balance:', error);
+    return { balance: 0 };
   }
+}
 
   // 3. Comprar tokens (transferencia del agricultor al comprador)
   async comprarTokens(

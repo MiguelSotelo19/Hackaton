@@ -140,13 +140,45 @@ class ApiClient {
   }
 
   async guardarCompraBlockchain(token: string, data: CompraBlockchainDTO): Promise<{ message: string; compra: any }> {
-    return this.request('/api/blockchain/compra', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const url = `${this.baseURL}/api/blockchain/compra`;
+    
+    const response = await fetch(url, {
       method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
       body: JSON.stringify(data),
     });
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}`);
+    }
+
+    // Verificar si es PDF o JSON
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType?.includes('application/pdf')) {
+      // Es PDF, descargarlo
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificado_${data.stellar_tx_hash.substring(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      return {
+        message: 'Compra registrada y certificado descargado',
+        compra: data
+      };
+    } else {
+      // Es JSON
+      return await response.json();
+    }
   }
 
   async guardarMinteoBlockchain(data: MintBlockchainDTO): Promise<{ message: string; minteo: any }> {
