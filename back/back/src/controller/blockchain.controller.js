@@ -1,5 +1,6 @@
 // src/controllers/blockchainController.js
 const { pool } = require('../config/Database');
+const { generarCertificadoBlockchain } = require('../services/certificado.service'); // ← Agregar esta línea
 
 /**
  * POST /api/blockchain/compra
@@ -63,23 +64,42 @@ exports.registrarCompra = async (req, res) => {
     );
 
     const compra = result.rows[0];
-
     console.log('✅ Compra blockchain registrada:', compra.id);
 
-    res.status(201).json({
-      message: 'Compra registrada exitosamente',
-      compra: {
-        id: compra.id,
-        empresa_id: compra.empresa_id,
-        agricultor_id: compra.agricultor_id,
-        toneladas: compra.toneladas,
-        precio_total: compra.precio_total,
-        stellar_tx_hash: compra.stellar_tx_hash,
-        fecha_compra: compra.fecha_compra,
-        estado: compra.estado
-      },
-      explorer_url: `https://stellar.expert/explorer/testnet/tx/${stellar_tx_hash}`
-    });
+    // Intentar generar PDF
+    try {
+      const pdfBuffer = await generarCertificadoBlockchain(compra.id, stellar_tx_hash);
+      
+      // Configurar headers para descarga automática
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="certificado_${compra.id}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.setHeader('X-Compra-Id', compra.id);
+      res.setHeader('X-Explorer-URL', `https://stellar.expert/explorer/testnet/tx/${stellar_tx_hash}`);
+      
+      // Enviar el PDF
+      return res.send(pdfBuffer);
+      
+    } catch (pdfError) {
+      console.error('⚠️ Error generando PDF:', pdfError.message);
+      
+      // Si falla el PDF, devolver JSON
+      return res.status(201).json({
+        message: 'Compra registrada exitosamente (PDF no disponible)',
+        compra: {
+          id: compra.id,
+          empresa_id: compra.empresa_id,
+          agricultor_id: compra.agricultor_id,
+          toneladas: compra.toneladas,
+          precio_total: compra.precio_total,
+          stellar_tx_hash: compra.stellar_tx_hash,
+          fecha_compra: compra.fecha_compra,
+          estado: compra.estado
+        },
+        explorer_url: `https://stellar.expert/explorer/testnet/tx/${stellar_tx_hash}`,
+        error_pdf: pdfError.message
+      });
+    }
 
   } catch (error) {
     console.error('❌ Error en registrarCompra:', error);

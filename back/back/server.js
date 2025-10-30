@@ -3,7 +3,7 @@ require('dotenv').config();
 const app = require('./src/app');
 const { pool } = require('./src/config/Database');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Test database connection
 pool.query('SELECT NOW()', (err, res) => {

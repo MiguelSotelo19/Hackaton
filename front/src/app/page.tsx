@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { Leaf, TrendingUp, Globe, Shield, Users, Zap, ArrowRight, CheckCircle, MapPin, DollarSign, BarChart3, Sparkles, Award, Target, Clock, FileCheck, Briefcase, Sprout, Package, X, Calculator, ChevronDown, ChevronUp, Car, Trees } from 'lucide-react';
+import ResponsiveNav from '@/components/ResponsiveNav';
 
 type UserType = 'agricultor' | 'empresa';
 
@@ -321,40 +322,10 @@ export default function LandingPage() {
         </div>
       )}
 
-      <nav className="relative z-50 bg-black/20 backdrop-blur-xl border-b border-white/10">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`bg-gradient-to-br ${activeConfig.theme.gradient} p-2.5 rounded-xl shadow-lg shadow-${activeConfig.theme.glowColor}/50 transition-all duration-500`}>
-                <Leaf className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">
-                  Agro<strong className={`bg-gradient-to-r ${activeConfig.theme.logo} bg-clip-text text-transparent`}>Can</strong>e
-                </h1>
-                <p className={`text-${activeConfig.theme.primary}-300 text-xs font-medium transition-colors duration-500`}>
-                  Powered by Stellar Blockchain
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={goToLogin}
-                className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-all border border-white/10 font-medium"
-              >
-                Iniciar Sesión
-              </button>
-              <button 
-                onClick={goToLogin}
-                className={`px-5 py-2.5 bg-gradient-to-r ${activeConfig.theme.gradient} hover:opacity-90 text-white rounded-xl transition-all font-semibold shadow-lg shadow-${activeConfig.theme.glowColor}/30 flex items-center gap-2`}
-              >
-                Comenzar Ahora
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <ResponsiveNav 
+        theme={activeConfig.theme}
+        onLogin={() => goToLogin()}
+      />
 
       <div className="relative z-50 bg-black/30 backdrop-blur-sm border-b border-white/10">
         <div className="container mx-auto px-6 py-4">

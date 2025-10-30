@@ -2,9 +2,12 @@
 
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Leaf, MapPin, TrendingUp, Filter, ArrowLeft, ShoppingCart, Sparkles, X, CheckCircle, DollarSign, Menu, Zap, Package } from 'lucide-react';
+import { Leaf, MapPin, TrendingUp, Filter, ShoppingCart, Sparkles, X, CheckCircle, DollarSign, Menu, Zap, Package } from 'lucide-react';
 import { PARCELAS_MOCK, Parcela } from '@/lib/mapbox-config';
 import { autoFillCart, CartItem, calculateCartStats } from '@/lib/cart-assistant';
+import { STELLAR_CONFIG } from '@/lib/stellar-config';
+import BlockchainCheckout from '@/components/BlockchainCheckout';
+import Toast from '@/components/Toast';
 import Link from 'next/link';
 
 const Map3DInteractive = dynamic(
@@ -27,6 +30,7 @@ export default function MapaPage() {
   const [showCart, setShowCart] = useState(false);
   const [showAssistant, setShowAssistant] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showBlockchainCheckout, setShowBlockchainCheckout] = useState(false);
   
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [co2Range, setCo2Range] = useState<[number, number]>([0, 500]);
@@ -34,6 +38,17 @@ export default function MapaPage() {
   
   const [cart, setCart] = useState<CartItem[]>([]);
   const [targetCO2, setTargetCO2] = useState('');
+
+  const [toasts, setToasts] = useState<Array<{ id: number; message: string; type: 'success' | 'error' | 'warning' | 'info' }>>([]);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id: number) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
   const filteredParcelas = PARCELAS_MOCK.filter(parcela => {
     const priceMatch = parcela.precio_por_tonelada >= priceRange[0] && parcela.precio_por_tonelada <= priceRange[1];
@@ -55,7 +70,7 @@ export default function MapaPage() {
   const handleAutoFill = () => {
     const target = parseFloat(targetCO2);
     if (isNaN(target) || target <= 0) {
-      alert('Por favor ingresa una cantidad válida');
+      showToast('Por favor ingresa una cantidad válida', 'warning');
       return;
     }
 
@@ -63,14 +78,14 @@ export default function MapaPage() {
     setCart(result.items);
     setShowAssistant(false);
     setShowCart(true);
-    setTimeout(() => alert(result.message), 300);
+    setTimeout(() => showToast(result.message, 'success'), 300);
   };
 
   const handleAddToCart = (parcela: Parcela) => {
     const existingItem = cart.find(item => item.parcela.id === parcela.id);
     
     if (existingItem) {
-      alert('Esta parcela ya está en tu carrito');
+      showToast('Esta parcela ya está en tu carrito', 'warning');
       return;
     }
 
@@ -81,7 +96,28 @@ export default function MapaPage() {
     };
 
     setCart([...cart, newItem]);
-    alert(`✅ Parcela #${parcela.id} agregada al carrito`);
+    showToast(`✅ Parcela #${parcela.id} agregada al carrito`, 'success');
+  };
+
+  const handlePagarConBlockchain = () => {
+    setShowCart(false);
+    setShowBlockchainCheckout(true);
+  };
+
+  // Mapear ID de parcela a agricultor (simplificado)
+  const getAgricultorData = (parcelaId: number) => {
+    // Distribuir parcelas entre los 3 agricultores
+    const agricultorIndex = (parcelaId % 3) + 1;
+    const wallets = [
+      STELLAR_CONFIG.ACCOUNTS.AGRICULTOR1,
+      STELLAR_CONFIG.ACCOUNTS.AGRICULTOR2,
+      STELLAR_CONFIG.ACCOUNTS.AGRICULTOR3,
+    ];
+    return {
+      id: agricultorIndex,
+      wallet: wallets[agricultorIndex - 1],
+      nombre: `Agricultor ${agricultorIndex}`,
+    };
   };
 
   return (
@@ -268,6 +304,7 @@ export default function MapaPage() {
         />
       </div>
 
+      {/* Filters Modal */}
       {showFilters && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-6">
           <div className="bg-gradient-to-br from-blue-900/95 to-indigo-900/95 backdrop-blur-xl rounded-t-3xl md:rounded-3xl w-full md:max-w-md p-6 md:p-8 max-h-[90vh] overflow-y-auto">
@@ -373,6 +410,7 @@ export default function MapaPage() {
         </div>
       )}
 
+      {/* Assistant Modal */}
       {showAssistant && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-6">
           <div className="bg-gradient-to-br from-purple-900/95 to-pink-900/95 backdrop-blur-xl rounded-t-3xl md:rounded-3xl w-full md:max-w-md p-6 md:p-8">
@@ -433,6 +471,7 @@ export default function MapaPage() {
         </div>
       )}
 
+      {/* Cart Modal */}
       {showCart && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-6">
           <div className="bg-gradient-to-br from-blue-900/95 to-indigo-900/95 backdrop-blur-xl rounded-t-3xl md:rounded-3xl w-full md:max-w-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto">
@@ -529,9 +568,12 @@ export default function MapaPage() {
                   >
                     Vaciar
                   </button>
-                  <button className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2">
+                  <button 
+                    onClick={handlePagarConBlockchain}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl font-bold transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2"
+                  >
                     <CheckCircle className="w-5 h-5" />
-                    Pagar
+                    Pagar con Blockchain
                   </button>
                 </div>
               </div>
@@ -539,6 +581,40 @@ export default function MapaPage() {
           </div>
         </div>
       )}
+
+      {/* Blockchain Checkout Modal */}
+      {showBlockchainCheckout && cart.length > 0 && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
+          <div className="bg-gradient-to-br from-blue-900/95 to-indigo-900/95 backdrop-blur-xl rounded-3xl w-full max-w-md p-8">
+            <BlockchainCheckout
+              agricultorId={getAgricultorData(cart[0].parcela.id).id}
+              agricultorWallet={getAgricultorData(cart[0].parcela.id).wallet}
+              agricultorNombre={getAgricultorData(cart[0].parcela.id).nombre}
+              cantidadTokens={cartStats.totalCO2}
+              precioTotal={cartStats.totalCost}
+              parcelaId={cart[0].parcela.id}
+              onSuccess={(txHash) => {
+                console.log('✅ Compra exitosa en blockchain:', txHash);
+                showToast('¡Compra exitosa! Tokens transferidos en Stellar blockchain', 'success');
+                setCart([]);
+                setShowBlockchainCheckout(false);
+                setShowCart(false);
+              }}
+              onCancel={() => setShowBlockchainCheckout(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Toasts */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }
